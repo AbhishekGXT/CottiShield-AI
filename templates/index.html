@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cotton Leaf Disease Diagnosis</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Fonts (Latin + Devanagari + Bengali so all 3 languages look sharp) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'Noto Sans Bengali', system-ui, sans-serif;
+        }
+
+        .font-hi {
+            font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .font-bn {
+            font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ---------- Glass ---------- */
+        .glass {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* ---------- Animated background ---------- */
+        .bg-animated {
+            background: linear-gradient(120deg, #ecfdf5, #d1fae5, #ccfbf1, #f0fdf4);
+            background-size: 300% 300%;
+            animation: gradientShift 16s ease infinite;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 9999px;
+            filter: blur(70px);
+            opacity: .45;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatBlob 14s ease-in-out infinite;
+        }
+
+        .leaf-float {
+            position: fixed;
+            bottom: -60px;
+            color: #10b981;
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none;
+            animation: leafRise linear infinite;
+        }
+
+        /* ---------- Keyframes ---------- */
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50%      { transform: translate(40px, -50px) scale(1.15); }
+        }
+
+        @keyframes leafRise {
+            0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10%  { opacity: .35; }
+            90%  { opacity: .2; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes headerDrop {
+            from { opacity: 0; transform: translateY(-100%); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes textShine {
+            to { background-position: 200% center; }
+        }
+
+        @keyframes sweep {
+            from { transform: translateX(-120%) skewX(-20deg); }
+            to   { transform: translateX(260%) skewX(-20deg); }
+        }
+
+        @keyframes scanLine {
+            0%   { top: 0%; }
+            50%  { top: 100%; }
+            100% { top: 0%; }
+        }
+
+        @keyframes pulseRing {
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.45); }
+            70%  { box-shadow: 0 0 0 16px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+
+        @keyframes popIn {
+            0%   { opacity: 0; transform: scale(.92) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes itemIn {
+            from { opacity: 0; transform: translateX(-16px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ---------- Utility animation classes ---------- */
+        .anim-fade-up {
+            opacity: 0;
+            animation: fadeUp .8s cubic-bezier(.2,.7,.2,1) forwards;
+        }
+
+        .anim-header {
+            animation: headerDrop .7s ease forwards;
+        }
+
+        .anim-pop {
+            animation: popIn .7s cubic-bezier(.2,.8,.2,1) forwards;
+        }
+
+        .d1 { animation-delay: .1s; }
+        .d2 { animation-delay: .25s; }
+        .d3 { animation-delay: .4s; }
+        .d4 { animation-delay: .55s; }
+
+        .shine-text {
+            background: linear-gradient(90deg, #047857, #10b981, #14b8a6, #047857);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: textShine 4s linear infinite;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity .8s ease, transform .8s ease;
+        }
+
+        .reveal.in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Upload zone */
+        .drop-zone {
+            transition: all .3s ease;
+            background: rgba(236,253,245,.4);
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            background: rgba(209,250,229,.65);
+            border-color: #10b981;
+            transform: scale(1.01);
+        }
+
+        .drop-zone.drag-over {
+            box-shadow: 0 0 0 6px rgba(16,185,129,.15);
+        }
+
+        /* Analyze button */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+            transform: translateX(-120%) skewX(-20deg);
+            animation: sweep 2.8s ease-in-out infinite;
+        }
+
+        .btn-pulse {
+            animation: pulseRing 2.2s infinite;
+        }
+
+        /* Scanner */
+        .scan-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: .75rem;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .scan-overlay::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            top: 0;
+            background: linear-gradient(90deg, transparent, #34d399, transparent);
+            box-shadow: 0 0 18px 6px rgba(52,211,153,.7);
+            animation: scanLine 1.8s ease-in-out infinite;
+        }
+
+        .scan-overlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(16,185,129,.18), transparent 40%, rgba(16,185,129,.18));
+        }
+
+        .ring-fg {
+            transition: stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1);
+        }
+
+        .lang-tab {
+            transition: all .25s ease;
+        }
+
+        .lang-tab.active {
+            background: #059669;
+            color: #fff;
+            box-shadow: 0 8px 18px -6px rgba(5,150,105,.55);
+            transform: translateY(-1px);
+        }
+
+        .lang-card {
+            transition: transform .35s ease, box-shadow .35s ease;
+        }
+
+        .lang-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 22px 40px -18px rgba(5,150,105,.35);
+        }
+
+        .remedy-item {
+            opacity: 0;
+            animation: itemIn .5s ease forwards;
+        }
+
+        #siteHeader {
+            transition: box-shadow .3s ease, background .3s ease;
+        }
+
+        #siteHeader.scrolled {
+            box-shadow: 0 10px 30px -12px rgba(16,185,129,.35);
+            background: rgba(255,255,255,.95);
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            height: 2px;
+            width: 0;
+            background: #10b981;
+            transition: width .3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+
+            .anim-fade-up,
+            .reveal,
+            .remedy-item {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-animated min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <!-- Animated background -->
+    <div class="blob w-96 h-96 bg-emerald-300 -top-24 -left-24"></div>
+    <div class="blob w-[28rem] h-[28rem] bg-teal-300 top-1/2 -right-32" style="animation-delay:-5s"></div>
+    <div class="blob w-80 h-80 bg-green-200 bottom-0 left-1/4" style="animation-delay:-9s"></div>
+    <div id="leafLayer" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <header id="siteHeader" class="sticky top-0 z-40 w-full py-4 px-6 md:px-8 bg-white/80 shadow-sm backdrop-blur-md anim-header">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-emerald-600 rounded-xl text-white shadow-md shadow-emerald-200 btn-pulse">
+                    <i class="fa-solid fa-leaf text-2xl"></i>
+                </div>
+
+                <div>
+                    <h1 class="text-2xl font-black text-gray-800 tracking-tight">
+                        CottiShield <span class="text-emerald-600">AI</span>
+                    </h1>
+                    <p class="text-xs text-gray-500 font-medium">
+                        Precision Cotton Diagnostics
+                    </p>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold text-gray-600">
+                <a href="#overview" class="nav-link hover:text-emerald-600 transition-colors">Overview</a>
+                <a href="#languages" class="nav-link hover:text-emerald-600 transition-colors">Languages</a>
+                <a href="#remedies" class="nav-link hover:text-emerald-600 transition-colors">Remedies</a>
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-grow max-w-5xl mx-auto w-full px-4 py-12 relative z-10">
+
+        <!-- Hero -->
+        <section id="overview" class="text-center mb-12 scroll-mt-28">
+
+            <span class="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-100/70 text-emerald-800 text-xs font-bold uppercase tracking-wider rounded-full">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                </span>
+                Modern Agritech Analyzer
+            </span>
+
+            <h2 class="anim-fade-up d1 text-4xl md:text-6xl font-extrabold text-gray-900 mt-4 tracking-tight leading-tight">
+                Instant <span class="shine-text">Leaf Disease</span> Diagnosis
+            </h2>
+
+            <p class="anim-fade-up d2 text-gray-600 mt-4 max-w-xl mx-auto">
+                Upload a clear photo of your cotton leaf to receive high-precision AI diagnoses,
+                native translations, and professional biological remedies.
+            </p>
+
+            <div class="anim-fade-up d3 mt-8 flex flex-wrap justify-center gap-3 text-sm font-semibold">
+                <span class="px-4 py-2 glass rounded-full shadow-sm text-emerald-800">
+                    <i class="fa-solid fa-bug mr-1.5"></i>3 diseases detected
+                </span>
+
+                <span class="px-4 py-2 glass rounded-full shadow-sm text-emerald-800">
+                    <i class="fa-solid fa-language mr-1.5"></i>3 languages
+                </span>
+
+                <span class="px-4 py-2 glass rounded-full shadow-sm text-emerald-800">
+                    <i class="fa-solid fa-bolt mr-1.5"></i>Results in seconds
+                </span>
+            </div>
+
+        </section>
+
+        <div class="grid gap-8">
+
+            <!-- Upload -->
+            <div class="anim-fade-up d4 glass rounded-3xl p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300">
+
+                <form id="uploadForm" class="space-y-6">
+
+                    <div id="dropZone" class="drop-zone border-4 border-dashed border-emerald-200 rounded-2xl p-8 text-center cursor-pointer group relative">
+
+                        <input
+                            type="file"
+                            name="file"
+                            id="fileInput"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            accept="image/*"
+                        >
+
+                        <div class="space-y-4" id="promptContainer">
+
+                            <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform btn-pulse">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600"></i>
+                            </div>
+
+                            <div class="text-gray-600">
+                                <span class="font-bold text-emerald-700">Click to upload</span>
+                                or drag and drop
+
+                                <p class="text-xs text-gray-400 mt-1">
+                                    PNG, JPG, or JPEG (Max 10MB)
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- Preview -->
+                        <div id="previewContainer" class="hidden relative z-10">
+
+                            <div class="relative inline-block">
+                                <img
+                                    id="imagePreview"
+                                    class="mx-auto max-h-64 rounded-xl shadow-md border"
+                                    src=""
+                                    alt="Uploaded leaf image"
+                                >
+                                <div id="scanOverlay" class="scan-overlay hidden"></div>
+                            </div>
+
+                            <div>
+                                <button
+                                    type="button"
+                                    id="removeBtn"
+                                    class="mt-3 px-4 py-1.5 bg-rose-500 text-white text-xs font-semibold rounded-lg hover:bg-rose-600 shadow-sm transition-all"
+                                >
+                                    Replace Image
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="text-center">
+
+                        <button
+                            type="submit"
+                            id="analyzeBtn"
+                            class="btn-shine btn-pulse w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg text-sm uppercase tracking-wider flex items-center justify-center mx-auto space-x-2"
+                        >
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Analyze Diagnostic</span>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="hidden text-center py-8">
+
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+
+                <p id="loadingText" class="text-emerald-800 font-bold mt-3 transition-opacity duration-300">
+                    AI Model running inference...
+                </p>
+
+            </div>
+
+            <!-- Results -->
+            <section id="remedies" class="scroll-mt-28">
+
+                <div id="remediesPlaceholder" class="glass rounded-3xl p-6 md:p-8 shadow-lg reveal">
+
+                    <h3 class="text-xs uppercase tracking-widest text-gray-500 font-extrabold">
+                        Recommended Cure &amp; Biological Remedies
+                    </h3>
+
+                    <p class="text-gray-600 text-sm mt-2">
+                        Upload a leaf photo and click <b>Analyze Diagnostic</b>.
+                        Remedies will appear here in three languages.
+                    </p>
+
+                    <div class="grid gap-4 md:grid-cols-3 mt-5">
+
+                        <div class="lang-card p-5 rounded-2xl border-2 border-dashed border-emerald-200 bg-white/60 text-center">
+                            <div class="text-lg font-black text-emerald-700">English</div>
+                            <p class="text-xs text-gray-400 mt-1">Waiting for analysis...</p>
+                        </div>
+
+                        <div class="lang-card p-5 rounded-2xl border-2 border-dashed border-emerald-200 bg-white/60 text-center font-hi">
+                            <div class="text-lg font-black text-teal-700">हिंदी</div>
+                            <p class="text-xs text-gray-400 mt-1">विश्लेषण की प्रतीक्षा है...</p>
+                        </div>
+
+                        <div class="lang-card p-5 rounded-2xl border-2 border-dashed border-emerald-200 bg-white/60 text-center font-bn">
+                            <div class="text-lg font-black text-green-800">বাংলা</div>
+                            <p class="text-xs text-gray-400 mt-1">বিশ্লেষণের অপেক্ষায়...</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Actual result -->
+                <div id="resultCard" class="hidden glass rounded-3xl p-6 md:p-8 shadow-xl border-l-8 border-emerald-500">
+
+                    <div class="flex flex-col md:flex-row gap-8">
+
+                        <!-- Image + confidence -->
+                        <div class="md:w-1/3 flex-shrink-0">
+
+                            <img
+                                id="resultImage"
+                                class="w-full h-48 object-cover rounded-2xl shadow-md border"
+                                src=""
+                                alt="Analyzed leaf"
+                            >
+
+                            <div class="mt-4 p-4 bg-emerald-50 rounded-2xl text-center">
+
+                                <span class="text-xs text-emerald-800 uppercase tracking-widest font-bold">
+                                    AI Confidence
+                                </span>
+
+                                <div class="relative w-32 h-32 mx-auto mt-2">
+
+                                    <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+
+                                        <circle
+                                            cx="60"
+                                            cy="60"
+                                            r="52"
+                                            fill="none"
+                                            stroke="#d1fae5"
+                                            stroke-width="10">
+                                        </circle>
+
+                                        <circle
+                                            id="ringFg"
+                                            class="ring-fg"
+                                            cx="60"
+                                            cy="60"
+                                            r="52"
+                                            fill="none"
+                                            stroke="#059669"
+                                            stroke-width="10"
+                                            stroke-linecap="round"
+                                            stroke-dasharray="326.73"
+                                            stroke-dashoffset="326.73">
+                                        </circle>
+
+                                    </svg>
+
+                                    <div
+                                        id="resultConfidence"
+                                        class="absolute inset-0 flex items-center justify-center text-xl font-black text-emerald-700">
+                                        0%
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Disease names -->
+                        <div class="md:w-2/3">
+
+                            <h3 class="text-xs uppercase tracking-widest text-emerald-800 font-extrabold mb-3">
+                                Multilingual Diagnostics
+                            </h3>
+
+                            <div class="grid gap-3">
+
+                                <div class="name-row p-3 bg-white rounded-xl shadow-sm border border-emerald-50 flex justify-between items-center">
+                                    <span class="text-sm text-gray-500 font-bold">English</span>
+                                    <span id="langEnglish" class="text-lg font-black text-gray-800"></span>
+                                </div>
+
+                                <div class="name-row p-3 bg-white rounded-xl shadow-sm border border-emerald-50 flex justify-between items-center">
+                                    <span class="text-sm text-gray-500 font-bold">Hindi (हिंदी)</span>
+                                    <span id="langHindi" class="text-lg font-black text-emerald-800 font-hi"></span>
+                                </div>
+
+                                <div class="name-row p-3 bg-white rounded-xl shadow-sm border border-emerald-50 flex justify-between items-center">
+                                    <span class="text-sm text-gray-500 font-bold">Bengali (বাংলা)</span>
+                                    <span id="langBengali" class="text-lg font-black text-teal-800 font-bn"></span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Remedies -->
+                    <div class="mt-8">
+
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+
+                            <h3 class="text-xs uppercase tracking-widest text-gray-500 font-extrabold">
+                                Recommended Cure &amp; Biological Remedies
+                            </h3>
+
+                            <div class="flex flex-wrap gap-2" id="langTabs">
+
+                                <button type="button" data-lang="all" class="lang-tab active px-4 py-1.5 rounded-full text-xs font-bold bg-white text-gray-600 border border-emerald-100">
+                                    All
+                                </button>
+
+                                <button type="button" data-lang="english" class="lang-tab px-4 py-1.5 rounded-full text-xs font-bold bg-white text-gray-600 border border-emerald-100">
+                                    English
+                                </button>
+
+                                <button type="button" data-lang="hindi" class="lang-tab px-4 py-1.5 rounded-full text-xs font-bold bg-white text-gray-600 border border-emerald-100 font-hi">
+                                    हिंदी
+                                </button>
+
+                                <button type="button" data-lang="bengali" class="lang-tab px-4 py-1.5 rounded-full text-xs font-bold bg-white text-gray-600 border border-emerald-100 font-bn">
+                                    বাংলা
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div id="remediesGrid" class="grid gap-4 md:grid-cols-3">
+
+                            <!-- English -->
+                            <div data-card="english" class="lang-card bg-white rounded-2xl p-5 border border-emerald-50 shadow-sm">
+
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-black">
+                                        EN
+                                    </span>
+                                    <h4 class="font-extrabold text-gray-800">English</h4>
+                                </div>
+
+                                <ul id="remediesEnglish" class="space-y-2 list-none pl-0"></ul>
+
+                            </div>
+
+                            <!-- Hindi -->
+                            <div data-card="hindi" class="lang-card bg-white rounded-2xl p-5 border border-emerald-50 shadow-sm font-hi">
+
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs font-black">
+                                        हिं
+                                    </span>
+                                    <h4 class="font-extrabold text-gray-800">हिंदी</h4>
+                                </div>
+
+                                <ul id="remediesHindi" class="space-y-2 list-none pl-0"></ul>
+
+                            </div>
+
+                            <!-- Bengali -->
+                            <div data-card="bengali" class="lang-card bg-white rounded-2xl p-5 border border-emerald-50 shadow-sm font-bn">
+
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-8 h-8 rounded-lg bg-green-700 text-white flex items-center justify-center text-xs font-black">
+                                        বা
+                                    </span>
+                                    <h4 class="font-extrabold text-gray-800">বাংলা</h4>
+                                </div>
+
+                                <ul id="remediesBengali" class="space-y-2 list-none pl-0"></ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Language information -->
+            <section id="languages" class="scroll-mt-28 reveal">
+
+                <div class="glass rounded-3xl p-6 md:p-8 shadow-lg">
+
+                    <h3 class="text-xl font-extrabold text-gray-800">
+                        Diagnosis in the language you read best
+                    </h3>
+
+                    <p class="text-gray-600 text-sm mt-1">
+                        Every result shows the disease name and its remedies in all three languages.
+                    </p>
+
+                    <div class="grid sm:grid-cols-3 gap-4 mt-5">
+
+                        <div class="lang-card p-4 rounded-2xl bg-white border border-emerald-50 text-center">
+                            <div class="text-2xl font-black text-emerald-700">English</div>
+                            <p class="text-xs text-gray-500 mt-1">Bacterial Blight</p>
+                        </div>
+
+                        <div class="lang-card p-4 rounded-2xl bg-white border border-emerald-50 text-center font-hi">
+                            <div class="text-2xl font-black text-teal-700">हिंदी</div>
+                            <p class="text-xs text-gray-500 mt-1">जीवाणु झुलसा</p>
+                        </div>
+
+                        <div class="lang-card p-4 rounded-2xl bg-white border border-emerald-50 text-center font-bn">
+                            <div class="text-2xl font-black text-green-800">বাংলা</div>
+                            <p class="text-xs text-gray-500 mt-1">ব্যাকটেরিয়াল ব্লাইট</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 w-full bg-slate-900 text-slate-400 py-12 px-6 mt-12 border-t border-slate-800">
+
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+
+            <div class="flex items-center space-x-3">
+
+                <div class="p-2 bg-emerald-600 rounded-lg text-white">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+
+                <span class="font-black text-white text-lg tracking-wider">
+                    CottiShield AI
+                </span>
+
+            </div>
+
+            <div class="text-center md:text-right">
+
+                <p class="text-sm font-semibold text-slate-200 tracking-wide">
+                    Engineered and Managed with ❤️ by
+                    <span class="text-emerald-400 font-extrabold uppercase">
+                        Abhishek
+                    </span>
+                </p>
+
+                <p class="text-xs text-slate-500 mt-1">
+                    &copy; 2025 Agritech AI Diagnostics. All rights reserved.
+                </p>
+
+            </div>
+
+        </div>
+
+    </footer>
+
+    <script>
+
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewContainer = document.getElementById('previewContainer');
+        const promptContainer = document.getElementById('promptContainer');
+        const removeBtn = document.getElementById('removeBtn');
+        const form = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const resultCard = document.getElementById('resultCard');
+        const dropZone = document.getElementById('dropZone');
+        const scanOverlay = document.getElementById('scanOverlay');
+        const ringFg = document.getElementById('ringFg');
+        const confidenceEl = document.getElementById('resultConfidence');
+        const remediesGrid = document.getElementById('remediesGrid');
+        const langTabs = document.querySelectorAll('.lang-tab');
+
+        const RING_LENGTH = 326.73;
+
+
+        /* ---------- Floating leaves ---------- */
+
+        (function makeLeaves() {
+
+            const layer = document.getElementById('leafLayer');
+
+            for (let i = 0; i < 9; i++) {
+
+                const el = document.createElement('i');
+
+                el.className = 'fa-solid fa-leaf leaf-float';
+
+                el.style.left = (Math.random() * 100) + 'vw';
+                el.style.fontSize = (14 + Math.random() * 20) + 'px';
+                el.style.animationDuration = (14 + Math.random() * 16) + 's';
+                el.style.animationDelay = (-Math.random() * 20) + 's';
+
+                layer.appendChild(el);
+            }
+
+        })();
+
+
+        /* ---------- Header ---------- */
+
+        const header = document.getElementById('siteHeader');
+
+        window.addEventListener('scroll', () => {
+
+            header.classList.toggle(
+                'scrolled',
+                window.scrollY > 10
+            );
+
+        }, { passive: true });
+
+
+        /* ---------- Scroll reveal ---------- */
+
+        const io = new IntersectionObserver((entries) => {
+
+            entries.forEach(en => {
+
+                if (en.isIntersecting) {
+
+                    en.target.classList.add('in');
+
+                    io.unobserve(en.target);
+                }
+
+            });
+
+        }, { threshold: 0.15 });
+
+
+        document
+            .querySelectorAll('.reveal')
+            .forEach(el => io.observe(el));
+
+
+        /* ---------- Drag highlight ---------- */
+
+        ['dragenter', 'dragover'].forEach(ev =>
+
+            dropZone.addEventListener(ev, () =>
+
+                dropZone.classList.add('drag-over')
+            )
+        );
+
+
+        ['dragleave', 'drop'].forEach(ev =>
+
+            dropZone.addEventListener(ev, () =>
+
+                dropZone.classList.remove('drag-over')
+            )
+        );
+
+
+        /* ---------- Image preview ---------- */
+
+        fileInput.addEventListener('change', function (e) {
+
+            const file = e.target.files[0];
+
+            if (file) {
+
+                const reader = new FileReader();
+
+                reader.onload = function (event) {
+
+                    imagePreview.src = event.target.result;
+
+                    previewContainer.classList.remove('hidden');
+
+                    previewContainer.classList.add('anim-pop');
+
+                    promptContainer.classList.add('hidden');
+
+                    fileInput.style.pointerEvents = 'none';
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+        });
+
+
+        /* ---------- Replace image ---------- */
+
+        removeBtn.addEventListener('click', function () {
+
+            fileInput.value = '';
+
+            fileInput.style.pointerEvents = 'auto';
+
+            imagePreview.src = '';
+
+            previewContainer.classList.add('hidden');
+
+            previewContainer.classList.remove('anim-pop');
+
+            promptContainer.classList.remove('hidden');
+
+            resultCard.classList.add('hidden');
+
+            document
+                .getElementById('remediesPlaceholder')
+                .classList.remove('hidden');
+
+        });
+
+
+        /* ---------- Language tabs ---------- */
+
+        function setLanguage(lang) {
+
+            langTabs.forEach(t =>
+
+                t.classList.toggle(
+                    'active',
+                    t.dataset.lang === lang
+                )
+            );
+
+
+            const showAll = lang === 'all';
+
+
+            remediesGrid.classList.toggle(
+                'md:grid-cols-3',
+                showAll
+            );
+
+
+            remediesGrid
+                .querySelectorAll('[data-card]')
+                .forEach(card => {
+
+                    const show =
+                        showAll ||
+                        card.dataset.card === lang;
+
+
+                    card.classList.toggle(
+                        'hidden',
+                        !show
+                    );
+
+
+                    if (show) {
+
+                        card.classList.remove('anim-pop');
+
+                        void card.offsetWidth;
+
+                        card.classList.add('anim-pop');
+                    }
+
+                });
+
+        }
+
+
+        langTabs.forEach(tab =>
+
+            tab.addEventListener(
+                'click',
+                () => setLanguage(tab.dataset.lang)
+            )
+        );
+
+
+        /* ---------- Remedy fallback ---------- */
+
+        const REMEDIES_FALLBACK = {
+
+            bacterial_blight: {
+
+                english: [
+                    "Apply Copper Oxychloride (0.3%).",
+                    "Use Streptocycline (100 ppm) at recommended intervals.",
+                    "Remove and destroy infected crop debris.",
+                    "Avoid excessive irrigation and keep the field clean."
+                ],
+
+                hindi: [
+                    "कॉपर ऑक्सीक्लोराइड (0.3%) का छिड़काव करें।",
+                    "अनुशंसित अंतराल पर स्ट्रेप्टोसाइक्लिन (100 ppm) का उपयोग करें।",
+                    "संक्रमित फसल अवशेषों को हटाकर नष्ट कर दें।",
+                    "अधिक सिंचाई से बचें और खेत को साफ रखें।"
+                ],
+
+                bengali: [
+                    "কপার অক্সিক্লোরাইড (০.৩%) প্রয়োগ করুন।",
+                    "সুপারিশকৃত বিরতিতে স্ট্রেপ্টোসাইক্লিন (১০০ ppm) ব্যবহার করুন।",
+                    "সংক্রমিত ফসলের অবশিষ্টাংশ তুলে নষ্ট করে ফেলুন।",
+                    "অতিরিক্ত সেচ এড়িয়ে চলুন এবং জমি পরিষ্কার রাখুন।"
+                ]
+            },
+
+
+            curl_virus: {
+
+                english: [
+                    "Control whiteflies because they can spread Leaf Curl Virus.",
+                    "Use Neem Oil (1% to 2%) as recommended.",
+                    "Use yellow sticky traps to monitor whiteflies.",
+                    "Remove severely infected plants and nearby weed hosts."
+                ],
+
+                hindi: [
+                    "सफेद मक्खी (व्हाइटफ्लाई) को नियंत्रित करें, क्योंकि यह लीफ कर्ल वायरस फैला सकती है।",
+                    "सिफारिश के अनुसार नीम तेल (1% से 2%) का उपयोग करें।",
+                    "सफेद मक्खी की निगरानी के लिए पीले चिपचिपे जाल लगाएं।",
+                    "गंभीर रूप से संक्रमित पौधों और आसपास के खरपतवार को हटा दें।"
+                ],
+
+                bengali: [
+                    "সাদা মাছি নিয়ন্ত্রণ করুন, কারণ এটি পাতা কোঁকড়ানো ভাইরাস ছড়াতে পারে।",
+                    "সুপারিশ অনুযায়ী নিম তেল (১% থেকে ২%) ব্যবহার করুন।",
+                    "সাদা মাছির উপস্থিতি নজরে রাখতে হলুদ আঠালো ফাঁদ ব্যবহার করুন।",
+                    "মারাত্মকভাবে আক্রান্ত গাছ এবং আশেপাশের আগাছা সরিয়ে ফেলুন।"
+                ]
+            },
+
+
+            fussarium_wilt: {
+
+                english: [
+                    "Apply Trichoderma viride to the soil.",
+                    "Pseudomonas fluorescens may be used as a bio-agent.",
+                    "Practice crop rotation.",
+                    "Maintain proper drainage and avoid waterlogging."
+                ],
+
+                hindi: [
+                    "मिट्टी में ट्राइकोडर्मा विरिडी डालें।",
+                    "जैव-एजेंट के रूप में स्यूडोमोनास फ्लोरेसेंस का उपयोग किया जा सकता है।",
+                    "फसल चक्र अपनाएं।",
+                    "उचित जल निकासी बनाए रखें और जलभराव से बचें।"
+                ],
+
+                bengali: [
+                    "মাটিতে ট্রাইকোডার্মা ভিরিডি প্রয়োগ করুন।",
+                    "জৈব নিয়ন্ত্রক হিসেবে সিউডোমোনাস ফ্লুরোসেন্স ব্যবহার করা যেতে পারে।",
+                    "শস্য আবর্তন অনুসরণ করুন।",
+                    "সঠিক নিষ্কাশন বজায় রাখুন এবং জল জমা এড়িয়ে চলুন।"
+                ]
+            },
+
+
+            healthy: {
+
+                english: [
+                    "No disease detected.",
+                    "Continue regular crop monitoring.",
+                    "Maintain balanced irrigation.",
+                    "Use balanced NPK fertilization."
+                ],
+
+                hindi: [
+                    "कोई रोग नहीं पाया गया।",
+                    "नियमित रूप से फसल की निगरानी करते रहें।",
+                    "संतुलित सिंचाई बनाए रखें।",
+                    "संतुलित NPK उर्वरक का उपयोग करें।"
+                ],
+
+                bengali: [
+                    "কোনো রোগ শনাক্ত হয়নি।",
+                    "নিয়মিত ফসল পর্যবেক্ষণ চালিয়ে যান।",
+                    "সুষম সেচ বজায় রাখুন।",
+                    "সুষম NPK সার ব্যবহার করুন।"
+                ]
+            }
+
+        };
+
+
+        /* ---------- Fill remedies ---------- */
+
+        function fillRemedies(listId, items, startDelay) {
+
+            const ul = document.getElementById(listId);
+
+            ul.innerHTML = '';
+
+
+            (items || []).forEach((text, i) => {
+
+                const li = document.createElement('li');
+
+                li.className =
+                    'remedy-item flex items-start space-x-2.5 p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-50';
+
+                li.style.animationDelay =
+                    (startDelay + i * 0.12) + 's';
+
+
+                const icon = document.createElement('i');
+
+                icon.className =
+                    'fa-regular fa-circle-check text-emerald-500 mt-1 flex-shrink-0';
+
+
+                const span = document.createElement('span');
+
+                span.className =
+                    'text-gray-700 text-sm leading-relaxed';
+
+                span.textContent = text;
+
+
+                li.appendChild(icon);
+
+                li.appendChild(span);
+
+                ul.appendChild(li);
+
+            });
+
+        }
+
+
+        /* ---------- Confidence ---------- */
+
+        function animateConfidence(percentText) {
+
+            const target =
+                parseFloat(percentText) || 0;
+
+
+            ringFg.style.strokeDashoffset =
+                RING_LENGTH;
+
+
+            requestAnimationFrame(() => {
+
+                requestAnimationFrame(() => {
+
+                    ringFg.style.strokeDashoffset =
+                        RING_LENGTH *
+                        (1 - target / 100);
+
+                });
+
+            });
+
+
+            const duration = 1600;
+
+            const start = performance.now();
+
+
+            function tick(now) {
+
+                const t =
+                    Math.min(
+                        (now - start) / duration,
+                        1
+                    );
+
+
+                const eased =
+                    1 -
+                    Math.pow(
+                        1 - t,
+                        3
+                    );
+
+
+                confidenceEl.textContent =
+                    (target * eased).toFixed(1) + '%';
+
+
+                if (t < 1) {
+
+                    requestAnimationFrame(tick);
+
+                } else {
+
+                    confidenceEl.textContent =
+                        percentText;
+                }
+
+            }
+
+
+            requestAnimationFrame(tick);
+
+        }
+
+
+        /* ---------- Loading ---------- */
+
+        const loadingMessages = [
+
+            'AI Model running inference...',
+
+            'Scanning leaf texture...',
+
+            'Checking disease patterns...',
+
+            'Preparing remedies in 3 languages...'
+
+        ];
+
+
+        let loadingTimer = null;
+
+
+        function startLoading() {
+
+            loading.classList.remove('hidden');
+
+            scanOverlay.classList.remove('hidden');
+
+
+            let i = 0;
+
+
+            loadingText.textContent =
+                loadingMessages[0];
+
+
+            loadingTimer =
+                setInterval(() => {
+
+                    i =
+                        (i + 1) %
+                        loadingMessages.length;
+
+
+                    loadingText.style.opacity = 0;
+
+
+                    setTimeout(() => {
+
+                        loadingText.textContent =
+                            loadingMessages[i];
+
+                        loadingText.style.opacity = 1;
+
+                    }, 250);
+
+
+                }, 1600);
+
+        }
+
+
+        function stopLoading() {
+
+            clearInterval(loadingTimer);
+
+            loadingText.style.opacity = 1;
+
+            loading.classList.add('hidden');
+
+            scanOverlay.classList.add('hidden');
+
+        }
+
+
+        /* ===================================================== */
+        /* SEND IMAGE TO FLASK */
+        /* ===================================================== */
+
+        form.addEventListener('submit', async function (e) {
+
+            e.preventDefault();
+
+
+            const formData =
+                new FormData(form);
+
+
+            if (fileInput.files.length === 0) {
+
+                alert(
+                    'Please upload an image first!'
+                );
+
+                return;
+            }
+
+
+            startLoading();
+
+            resultCard.classList.add('hidden');
+
+
+            try {
+
+                const response =
+                    await fetch('/predict', {
+
+                        method: 'POST',
+
+                        body: formData
+
+                    });
+
+
+                const data =
+                    await response.json();
+
+
+                if (data.success) {
+
+
+                    /* Result image */
+
+                    document
+                        .getElementById('resultImage')
+                        .src =
+                        data.image_url;
+
+
+                    /* Disease names */
+
+                    document
+                        .getElementById('langEnglish')
+                        .textContent =
+                        data.names.english;
+
+
+                    document
+                        .getElementById('langHindi')
+                        .textContent =
+                        data.names.hindi;
+
+
+                    document
+                        .getElementById('langBengali')
+                        .textContent =
+                        data.names.bengali;
+
+
+                    /* Remedies */
+
+                    const r =
+                        data.remedies;
+
+
+                    const remedies =
+                        Array.isArray(r)
+                            ? { english: r }
+                            : (r || {});
+
+
+                    const fb =
+                        REMEDIES_FALLBACK[
+                            data.predicted_class
+                        ] || {};
+
+
+                    const pick =
+                        (lang) =>
+                            (
+                                remedies[lang] &&
+                                remedies[lang].length
+                            )
+                                ? remedies[lang]
+                                : (fb[lang] || []);
+
+
+                    fillRemedies(
+                        'remediesEnglish',
+                        pick('english'),
+                        0.4
+                    );
+
+
+                    fillRemedies(
+                        'remediesHindi',
+                        pick('hindi'),
+                        0.55
+                    );
+
+
+                    fillRemedies(
+                        'remediesBengali',
+                        pick('bengali'),
+                        0.7
+                    );
+
+
+                    setLanguage('all');
+
+
+                    /* Name animations */
+
+                    document
+                        .querySelectorAll('.name-row')
+                        .forEach((row, i) => {
+
+                            row.classList.remove(
+                                'anim-fade-up'
+                            );
+
+                            void row.offsetWidth;
+
+
+                            row.style.animationDelay =
+                                (0.15 + i * 0.12) + 's';
+
+
+                            row.classList.add(
+                                'anim-fade-up'
+                            );
+
+                        });
+
+
+                    /* Hide placeholder */
+
+                    document
+                        .getElementById(
+                            'remediesPlaceholder'
+                        )
+                        .classList
+                        .add('hidden');
+
+
+                    /* Show result */
+
+                    resultCard
+                        .classList
+                        .remove('hidden');
+
+
+                    resultCard
+                        .classList
+                        .remove('anim-pop');
+
+
+                    void resultCard.offsetWidth;
+
+
+                    resultCard
+                        .classList
+                        .add('anim-pop');
+
+
+                    /* Confidence */
+
+                    animateConfidence(
+                        data.confidence
+                    );
+
+
+                    /* Scroll */
+
+                    resultCard.scrollIntoView({
+
+                        behavior: 'smooth',
+
+                        block: 'start'
+
+                    });
+
+
+                } else {
+
+
+                    alert(
+
+                        'Diagnostic Error: ' +
+
+                        (
+                            data.error ||
+                            'Unknown error occurred.'
+                        )
+
+                    );
+
+                }
+
+
+            } catch (err) {
+
+
+                alert(
+                    'Error connecting to the server.'
+                );
+
+
+                console.error(err);
+
+
+            } finally {
+
+
+                stopLoading();
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
