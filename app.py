@@ -19,7 +19,8 @@ app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MODEL_PATH = os.path.join(BASE_DIR, "model.keras")
+# NEW TFLITE MODEL
+MODEL_PATH = os.path.join(BASE_DIR, "model.tflite")
 
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 
@@ -29,14 +30,23 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 # ============================================================
-# LOAD MODEL
+# LOAD TFLITE MODEL
 # ============================================================
 
-print("Loading model...")
+print("Loading TFLite model...")
 
-model = tf.keras.models.load_model(MODEL_PATH)
+interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
 
-print("Model loaded successfully!")
+# Allocate memory for model tensors
+interpreter.allocate_tensors()
+
+# Get model input and output information
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+print("TFLite model loaded successfully!")
+print("Input details:", input_details)
+print("Output details:", output_details)
 
 
 # ============================================================
@@ -173,6 +183,40 @@ def preprocess_image(image_path):
 
 
 # ============================================================
+# TFLITE PREDICTION FUNCTION
+# ============================================================
+
+def predict_with_tflite(img_array):
+
+    # Get input tensor information
+    input_index = input_details[0]["index"]
+
+    # Get output tensor information
+    output_index = output_details[0]["index"]
+
+    # Make sure datatype matches model input
+    input_dtype = input_details[0]["dtype"]
+
+    img_array = img_array.astype(input_dtype)
+
+    # Give image to TFLite model
+    interpreter.set_tensor(
+        input_index,
+        img_array
+    )
+
+    # Run prediction
+    interpreter.invoke()
+
+    # Get prediction result
+    predictions = interpreter.get_tensor(
+        output_index
+    )
+
+    return predictions
+
+
+# ============================================================
 # HOME PAGE
 # ============================================================
 
@@ -227,7 +271,8 @@ def predict():
 
             return jsonify({
                 "success": False,
-                "error": "Only PNG, JPG, JPEG and WEBP images are allowed."
+                "error":
+                    "Only PNG, JPG, JPEG and WEBP images are allowed."
             }), 400
 
 
@@ -257,12 +302,11 @@ def predict():
 
 
         # ----------------------------------------------------
-        # MODEL PREDICTION
+        # TFLITE MODEL PREDICTION
         # ----------------------------------------------------
 
-        predictions = model.predict(
-            img_array,
-            verbose=0
+        predictions = predict_with_tflite(
+            img_array
         )
 
         print("Raw prediction:")
@@ -282,7 +326,8 @@ def predict():
 
             return jsonify({
                 "success": False,
-                "error": "Model output does not match CLASS_NAMES."
+                "error":
+                    "Model output does not match CLASS_NAMES."
             }), 500
 
 
@@ -318,11 +363,14 @@ def predict():
 
             "success": True,
 
-            "predicted_class": predicted_class,
+            "predicted_class":
+                predicted_class,
 
-            "confidence": f"{confidence * 100:.2f}%",
+            "confidence":
+                f"{confidence * 100:.2f}%",
 
-            "image_url": "/static/uploads/" + filename,
+            "image_url":
+                "/static/uploads/" + filename,
 
             "names": {
 
